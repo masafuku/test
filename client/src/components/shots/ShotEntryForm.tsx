@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import type { Club, ShotDirection } from '../../types/models';
+import type { Club, ShotDirection, ShotStrength } from '../../types/models';
 import { parseShotText } from '../../lib/parseShotText';
+import { STRENGTH_OPTIONS } from '../../lib/shotLabels';
 import type { NewShotInput } from '../../hooks/useShots';
 
 const DIRECTIONS: ShotDirection[] = ['STRAIGHT', 'DRAW', 'FADE', 'PULL', 'PUSH', 'SLICE', 'HOOK'];
@@ -8,6 +9,32 @@ const DIRECTIONS: ShotDirection[] = ['STRAIGHT', 'DRAW', 'FADE', 'PULL', 'PUSH',
 const DISTANCE_MIN = 0;
 const DISTANCE_MAX = 300;
 const DEFAULT_DISTANCE = '150';
+
+/** Tap-friendly single-select button group — replaces a native <select> for choices made repeatedly on a phone. */
+function ChipGroup<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div className="chip-group">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          className={`chip-button${o.value === value ? ' active' : ''}`}
+          onClick={() => onChange(o.value)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function ShotEntryForm({
   clubs,
@@ -18,6 +45,7 @@ export function ShotEntryForm({
 }) {
   const activeClubs = clubs.filter((c) => c.isActive ?? true);
   const [clubId, setClubId] = useState(activeClubs[0]?.id ?? '');
+  const [strength, setStrength] = useState<ShotStrength>('FULL');
   const [carryDistanceYds, setCarryDistanceYds] = useState(DEFAULT_DISTANCE);
   const [direction, setDirection] = useState<ShotDirection>('STRAIGHT');
   const [voiceText, setVoiceText] = useState('');
@@ -25,9 +53,10 @@ export function ShotEntryForm({
 
   // Free-text field meant to be filled via the iPhone keyboard's built-in
   // dictation (mic button) — this app never talks to a speech-recognition
-  // API itself. Only distance and direction are parsed out of it; the club
-  // stays a tap-selection above because club-name phrasing is too varied
-  // for a rule-based parser to extract reliably.
+  // API itself. Only distance and direction are parsed out of it; club and
+  // strength stay tap-selections because their phrasing is too varied (and
+  // too easily mis-heard by dictation) for a rule-based parser to extract
+  // reliably.
   function handleVoiceTextBlur() {
     if (!voiceText.trim()) return;
     const parsed = parseShotText(voiceText);
@@ -52,12 +81,14 @@ export function ShotEntryForm({
     if (!clubId) return;
     onSubmit({
       clubId,
+      strength,
       carryDistanceYds: parseFloat(carryDistanceYds),
       direction,
       shotShapeNotes: unparsedNote || undefined,
     });
-    // Reset distance/direction/text but keep the same club selected, since
-    // the common workflow is logging many balls in a row with one club.
+    // Reset distance/direction/strength/text but keep the same club selected,
+    // since the common workflow is logging many balls in a row with one club.
+    setStrength('FULL');
     setCarryDistanceYds(DEFAULT_DISTANCE);
     setDirection('STRAIGHT');
     setVoiceText('');
@@ -66,17 +97,6 @@ export function ShotEntryForm({
 
   return (
     <form onSubmit={handleSubmit} className="shot-entry-form">
-      <label>
-        クラブ
-        <select value={clubId} onChange={(e) => setClubId(e.target.value)}>
-          {activeClubs.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
-
       <label>
         音声/テキスト入力(マイクで話す、例:「145ヤード、ちょっと右」)
         <input
@@ -94,6 +114,20 @@ export function ShotEntryForm({
       )}
 
       <label>
+        クラブ
+        <ChipGroup
+          options={activeClubs.map((c) => ({ value: c.id, label: c.name }))}
+          value={clubId}
+          onChange={setClubId}
+        />
+      </label>
+
+      <label>
+        強度
+        <ChipGroup options={STRENGTH_OPTIONS} value={strength} onChange={setStrength} />
+      </label>
+
+      <label>
         飛距離(ヤード)
         <span className="distance-readout">{carryDistanceYds}y</span>
         <input
@@ -108,13 +142,7 @@ export function ShotEntryForm({
 
       <label>
         方向
-        <select value={direction} onChange={(e) => setDirection(e.target.value as ShotDirection)}>
-          {DIRECTIONS.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
+        <ChipGroup options={DIRECTIONS.map((d) => ({ value: d, label: d }))} value={direction} onChange={setDirection} />
       </label>
 
       <button type="submit" disabled={!clubId}>

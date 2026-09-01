@@ -1,4 +1,5 @@
 import type { Club, ShotRecord } from '../../types/models';
+import { STRENGTH_LABELS } from '../../lib/shotLabels';
 
 export function ShotHistoryTable({
   shots,
@@ -25,6 +26,7 @@ export function ShotHistoryTable({
         <tr>
           <th>日時</th>
           <th>クラブ</th>
+          <th>強度</th>
           <th>飛距離</th>
           <th>方向</th>
           <th></th>
@@ -35,6 +37,7 @@ export function ShotHistoryTable({
           <tr key={shot.id}>
             <td>{new Date(shot.recordedAt).toLocaleString()}</td>
             <td>{clubName(shot.clubId)}</td>
+            <td>{shot.strength ? STRENGTH_LABELS[shot.strength] : '-'}</td>
             <td>{shot.carryDistanceYds != null ? `${shot.carryDistanceYds}y` : '-'}</td>
             <td>{shot.direction ?? '-'}</td>
             <td>

@@ -36,7 +36,12 @@ function extractDistance(text: string): number | null {
   const normalized = normalizeDigits(text);
 
   // Prefer a number explicitly tagged with a distance unit (yard/y/m).
-  const withUnit = normalized.match(/(\d+(?:\.\d+)?)\s*(?:ヤード|yd|yds|y|メートル|m)\b/i);
+  // \b (word boundary) only applies to the ASCII unit aliases below —
+  // ヤード/メートル are never \w in JS regex, so a trailing \b after them can
+  // never be a boundary and the match always fails, silently falling through
+  // to the bare-number fallback and picking up an unrelated earlier number
+  // (e.g. "7番アイアン150ヤード" would wrongly extract "7").
+  const withUnit = normalized.match(/(\d+(?:\.\d+)?)\s*(?:ヤード|メートル|yds?\b|y\b|m\b)/i);
   if (withUnit) {
     return parseFloat(withUnit[1]);
   }

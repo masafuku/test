@@ -19,6 +19,19 @@ describe('parseShotText', () => {
     expect(result.distanceYds).toBe(145);
   });
 
+  it('prefers the unit-tagged number over an earlier unrelated number (club number, loft, etc.)', () => {
+    expect(parseShotText('7番アイアン150ヤード').distanceYds).toBe(150);
+    expect(parseShotText('7番アイアンで150ヤード、ちょっと右').distanceYds).toBe(150);
+    expect(parseShotText('７番アイアン１５０ヤード').distanceYds).toBe(150);
+    expect(parseShotText('52度で60ヤード').distanceYds).toBe(60);
+  });
+
+  it('matches ASCII distance units too', () => {
+    expect(parseShotText('150y').distanceYds).toBe(150);
+    expect(parseShotText('150 yds').distanceYds).toBe(150);
+    expect(parseShotText('150m').distanceYds).toBe(150);
+  });
+
   it('recognizes shot-shape words over generic left/right words', () => {
     expect(parseShotText('スライスした').direction).toBe('SLICE');
     expect(parseShotText('フックした').direction).toBe('HOOK');

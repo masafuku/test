@@ -1,6 +1,5 @@
 import type { Club } from '../../types/models';
-
-const CATEGORY_ORDER = ['DRIVER', 'WOOD', 'HYBRID', 'IRON', 'WEDGE', 'PUTTER', 'OTHER'];
+import { sortByBagOrder } from '../../lib/clubOrder';
 
 export function ClubList({
   clubs,
@@ -9,9 +8,7 @@ export function ClubList({
   clubs: Club[];
   onToggleActive: (id: string, isActive: boolean) => void;
 }) {
-  const sorted = [...clubs].sort(
-    (a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category),
-  );
+  const sorted = sortByBagOrder(clubs);
 
   if (sorted.length === 0) {
     return <p>クラブが登録されていません。下のフォームか「標準セットを読み込む」から追加してください。</p>;

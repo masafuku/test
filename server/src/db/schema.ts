@@ -20,6 +20,7 @@ export const shotRecords = sqliteTable("shot_records", {
   carryDistanceYds: real("carry_distance_yds"),
   totalDistanceYds: real("total_distance_yds"),
   direction: text("direction"), // ShotDirection union, see client/src/types/models.ts
+  strength: text("strength"), // ShotStrength union, see client/src/types/models.ts
   lateralDeviationYds: real("lateral_deviation_yds"),
   shotShapeNotes: text("shot_shape_notes"),
   source: text("source").notNull(), // ShotSource union, always 'MANUAL' today

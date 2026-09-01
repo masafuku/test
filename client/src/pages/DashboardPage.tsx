@@ -4,8 +4,7 @@ import { ClubStatsTable } from '../components/stats/ClubStatsTable';
 import { InsightBadge } from '../components/stats/InsightBadge';
 import { ShotScatterChart } from '../components/stats/ShotScatterChart';
 import { computeDistanceStats, generateGappingInsights } from '../lib/statistics';
-
-const CATEGORY_ORDER = ['DRIVER', 'WOOD', 'HYBRID', 'IRON', 'WEDGE', 'PUTTER', 'OTHER'];
+import { sortByBagOrder } from '../lib/clubOrder';
 
 export function DashboardPage() {
   const { clubs, loading: clubsLoading } = useClubs();
@@ -13,9 +12,7 @@ export function DashboardPage() {
 
   if (clubsLoading || shotsLoading) return <p>読み込み中...</p>;
 
-  const activeClubs = clubs
-    .filter((c) => c.isActive ?? true)
-    .sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category));
+  const activeClubs = sortByBagOrder(clubs.filter((c) => c.isActive ?? true));
 
   const clubStatsForGapping = activeClubs
     .map((club) => {

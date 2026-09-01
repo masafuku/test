@@ -4,21 +4,21 @@ import { ShotEntryPage } from './pages/ShotEntryPage';
 import { DashboardPage } from './pages/DashboardPage';
 import './App.css';
 
-type Tab = 'dashboard' | 'shots' | 'clubs';
+type Tab = 'shots' | 'dashboard' | 'clubs';
 
 function App() {
-  const [tab, setTab] = useState<Tab>('dashboard');
+  const [tab, setTab] = useState<Tab>('shots');
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>My Golf Log</h1>
         <nav>
-          <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
-            ダッシュボード
-          </button>
           <button className={tab === 'shots' ? 'active' : ''} onClick={() => setTab('shots')}>
             ショット入力
+          </button>
+          <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
+            ダッシュボード
           </button>
           <button className={tab === 'clubs' ? 'active' : ''} onClick={() => setTab('clubs')}>
             クラブ管理
@@ -26,8 +26,8 @@ function App() {
         </nav>
       </header>
       <main>
-        {tab === 'dashboard' && <DashboardPage />}
         {tab === 'shots' && <ShotEntryPage />}
+        {tab === 'dashboard' && <DashboardPage />}
         {tab === 'clubs' && <ClubsPage />}
       </main>
     </div>
