@@ -1,0 +1,124 @@
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: system-ui, sans-serif;
+}
+
+.app-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.app-header nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.app-header nav button {
+  flex: 1;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f5f5f5;
+  cursor: pointer;
+}
+
+.app-header nav button.active {
+  background: #2c7a4b;
+  color: white;
+  border-color: #2c7a4b;
+}
+
+.club-form,
+.shot-entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  max-width: 420px;
+}
+
+.club-form label,
+.shot-entry-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.club-list {
+  list-style: none;
+  padding: 0;
+}
+
+.club-list li {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.club-list li.inactive {
+  opacity: 0.5;
+}
+
+.club-list .category {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.club-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.club-stats-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.club-stats-card dl {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 0.25rem 1rem;
+  margin: 0.5rem 0;
+}
+
+.club-stats-card dt {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.insight-badge {
+  background: #eef7ee;
+  border-left: 3px solid #2c7a4b;
+  padding: 0.5rem 0.75rem;
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+  border-radius: 4px;
+}
+
+.parse-warning {
+  color: #a15c00;
+  font-size: 0.85rem;
+}
+
+.shot-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.shot-history-table th,
+.shot-history-table td {
+  text-align: left;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
