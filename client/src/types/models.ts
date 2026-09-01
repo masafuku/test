@@ -6,6 +6,8 @@ export type ShotSource = 'MANUAL' | 'CSV_IMPORT' | 'LAUNCH_MONITOR_API';
 
 export type ShotStrength = 'FULL' | 'HALF' | 'PITCH_AND_RUN' | 'LOB' | 'RUNNING';
 
+export type ShotLie = 'TEE' | 'FAIRWAY' | 'ROUGH' | 'APPROACH';
+
 export interface Club {
   id: string;
   name: string;
@@ -23,6 +25,7 @@ export interface ShotRecord {
   totalDistanceYds?: number | null;
   direction?: ShotDirection | null;
   strength?: ShotStrength | null;
+  lie?: ShotLie | null;
   lateralDeviationYds?: number | null;
   shotShapeNotes?: string | null;
   source: ShotSource;

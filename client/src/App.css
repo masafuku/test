@@ -71,8 +71,24 @@
   color: #2c7a4b;
 }
 
-/* Tap-friendly button groups (club / strength / direction pickers), replacing
-   native <select> dropdowns for choices made repeatedly on a phone. */
+/* Tap-friendly button groups (club / lie / strength / direction pickers),
+   replacing native <select> dropdowns for choices made repeatedly on a
+   phone. Grouped in a <fieldset>/<legend> (not <label> — see ChipGroup's
+   own comment), so its default border/padding/margin need resetting. */
+.chip-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.chip-fieldset legend {
+  font-size: 0.9rem;
+  padding: 0;
+}
+
 .chip-group {
   display: flex;
   flex-wrap: wrap;

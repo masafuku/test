@@ -1,4 +1,4 @@
-import type { Club, ClubCategory, ShotDirection, ShotRecord, ShotSource, ShotStrength } from '../types/models';
+import type { Club, ClubCategory, ShotDirection, ShotLie, ShotRecord, ShotSource, ShotStrength } from '../types/models';
 
 // import.meta.env.BASE_URL already ends with "/" (Vite's `base` config), so this
 // resolves correctly whether the app is served at site root or under a subpath
@@ -21,6 +21,7 @@ export interface NewShotInput {
   totalDistanceYds?: number;
   direction?: ShotDirection;
   strength?: ShotStrength;
+  lie?: ShotLie;
   lateralDeviationYds?: number;
   shotShapeNotes?: string;
   sessionLabel?: string;

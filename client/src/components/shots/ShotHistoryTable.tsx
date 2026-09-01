@@ -1,5 +1,5 @@
 import type { Club, ShotRecord } from '../../types/models';
-import { STRENGTH_LABELS } from '../../lib/shotLabels';
+import { LIE_LABELS, STRENGTH_LABELS } from '../../lib/shotLabels';
 
 export function ShotHistoryTable({
   shots,
@@ -16,6 +16,12 @@ export function ShotHistoryTable({
     (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime(),
   );
 
+  function handleDelete(id: string) {
+    if (window.confirm('このショットを削除しますか?')) {
+      onDelete(id);
+    }
+  }
+
   if (sorted.length === 0) {
     return <p>まだショットが記録されていません。</p>;
   }
@@ -26,6 +32,7 @@ export function ShotHistoryTable({
         <tr>
           <th>日時</th>
           <th>クラブ</th>
+          <th>ライ</th>
           <th>強度</th>
           <th>飛距離</th>
           <th>方向</th>
@@ -37,11 +44,12 @@ export function ShotHistoryTable({
           <tr key={shot.id}>
             <td>{new Date(shot.recordedAt).toLocaleString()}</td>
             <td>{clubName(shot.clubId)}</td>
+            <td>{shot.lie ? LIE_LABELS[shot.lie] : '-'}</td>
             <td>{shot.strength ? STRENGTH_LABELS[shot.strength] : '-'}</td>
             <td>{shot.carryDistanceYds != null ? `${shot.carryDistanceYds}y` : '-'}</td>
             <td>{shot.direction ?? '-'}</td>
             <td>
-              <button onClick={() => onDelete(shot.id)}>削除</button>
+              <button onClick={() => handleDelete(shot.id)}>削除</button>
             </td>
           </tr>
         ))}
