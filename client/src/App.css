@@ -77,28 +77,51 @@
   font-size: 0.85rem;
 }
 
-.club-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.club-stats-card {
+.club-stats-table-wrap {
+  overflow-x: auto;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 1rem;
 }
 
-.club-stats-card dl {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 0.25rem 1rem;
-  margin: 0.5rem 0;
+.club-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
 }
 
-.club-stats-card dt {
+.club-stats-table th,
+.club-stats-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #eee;
+  white-space: nowrap;
+}
+
+.club-stats-table thead th {
+  text-align: left;
   color: #888;
-  font-size: 0.85rem;
+  font-weight: 500;
+  font-size: 0.8rem;
+  background: #fafafa;
+}
+
+.club-stats-table tbody th {
+  text-align: left;
+  font-weight: 600;
+}
+
+.club-stats-table td {
+  text-align: right;
+}
+
+.club-stats-table tbody tr:last-child th,
+.club-stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.club-stats-table td.no-data {
+  text-align: left;
+  color: #aaa;
+  font-style: italic;
 }
 
 .insight-badge {

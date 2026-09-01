@@ -1,6 +1,6 @@
 import { useClubs } from '../hooks/useClubs';
 import { useShots } from '../hooks/useShots';
-import { ClubStatsCard } from '../components/stats/ClubStatsCard';
+import { ClubStatsTable } from '../components/stats/ClubStatsTable';
 import { InsightBadge } from '../components/stats/InsightBadge';
 import { ShotScatterChart } from '../components/stats/ShotScatterChart';
 import { computeDistanceStats, generateGappingInsights } from '../lib/statistics';
@@ -32,11 +32,7 @@ export function DashboardPage() {
       {gappingInsights.map((insight, i) => (
         <InsightBadge key={i} insight={insight} />
       ))}
-      <div className="club-stats-grid">
-        {activeClubs.map((club) => (
-          <ClubStatsCard key={club.id} club={club} shots={shotsForClub(club.id)} />
-        ))}
-      </div>
+      {activeClubs.length > 0 && <ClubStatsTable clubs={activeClubs} shotsForClub={shotsForClub} />}
       {activeClubs.length === 0 && <p>クラブが登録されていません。</p>}
       {shots.length === 0 && activeClubs.length > 0 && <p>まだショットが記録されていません。</p>}
 
