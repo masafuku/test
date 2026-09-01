@@ -18,6 +18,9 @@ dist-ssr
 *.db-journal
 *.tsbuildinfo
 
+# Claude Code session state (not project content)
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
