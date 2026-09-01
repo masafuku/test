@@ -1,106 +1,143 @@
-import type { ShotDirection, ShotRecord } from '../../types/models';
+import { useState } from 'react';
+import type { Club, ShotDirection, ShotRecord } from '../../types/models';
+import { colorForIndex } from '../../lib/clubColors';
 
-// Fixed left-to-right order, matching the LEFT_DIRECTIONS/RIGHT_DIRECTIONS
-// classification in lib/statistics.ts (severity increasing away from center).
-const DIRECTION_ORDER: ShotDirection[] = ['HOOK', 'PULL', 'DRAW', 'STRAIGHT', 'FADE', 'PUSH', 'SLICE'];
+// Toptracer-style "club comparison" dispersion view: distance runs up the
+// y-axis from the tee at the bottom, lateral miss runs left/right on the
+// x-axis, and every club is overlaid on one chart in its own color with a
+// legend to toggle clubs on/off.
+//
+// Real shot entries almost never carry a precise lateralDeviationYds (the
+// entry form only captures the direction category — see ShotEntryForm), so
+// that field is used when present and otherwise approximated from direction
+// severity. This keeps the chart populated for normal use while still using
+// real numbers wherever they exist.
+const DIRECTION_OFFSET_YDS: Record<ShotDirection, number> = {
+  HOOK: -18,
+  PULL: -10,
+  DRAW: -5,
+  STRAIGHT: 0,
+  FADE: 5,
+  PUSH: 10,
+  SLICE: 18,
+};
+
+function lateralYds(s: ShotRecord): number | null {
+  if (s.lateralDeviationYds != null) return s.lateralDeviationYds;
+  if (s.direction != null) return DIRECTION_OFFSET_YDS[s.direction];
+  return null;
+}
 
 const WIDTH = 640;
-const HEIGHT = 320;
-const MARGIN = { top: 16, right: 16, bottom: 32, left: 44 };
+const HEIGHT = 520;
+const MARGIN = { top: 16, right: 16, bottom: 28, left: 44 };
 const PLOT_W = WIDTH - MARGIN.left - MARGIN.right;
 const PLOT_H = HEIGHT - MARGIN.top - MARGIN.bottom;
 
-/** Deterministic pseudo-random in [-1, 1], stable per shot id so re-renders don't jitter. */
-function stableJitter(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  return ((hash % 1000) / 1000) * 2 - 1;
-}
-
-/** Picks a "nice" gridline step (multiple of 5/10/25/50) for the given range. */
 function niceStep(range: number): number {
   const candidates = [5, 10, 25, 50, 100];
-  const target = range / 5;
+  const target = range / 6;
   return candidates.reduce((best, c) => (Math.abs(c - target) < Math.abs(best - target) ? c : best), candidates[0]);
 }
 
-export function ShotScatterChart({ shots }: { shots: ShotRecord[] }) {
-  const plottable = shots.filter((s) => s.carryDistanceYds != null && s.direction != null);
+export function ShotScatterChart({ clubs, shotsForClub }: { clubs: Club[]; shotsForClub: (clubId: string) => ShotRecord[] }) {
+  const series = clubs.map((club, i) => ({
+    club,
+    color: colorForIndex(i),
+    shots: shotsForClub(club.id).filter((s) => s.carryDistanceYds != null && lateralYds(s) != null),
+  }));
 
-  if (plottable.length === 0) {
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  function toggle(clubId: string) {
+    setHidden((prev) => {
+      const next = new Set(prev);
+      if (next.has(clubId)) next.delete(clubId);
+      else next.add(clubId);
+      return next;
+    });
+  }
+
+  const visibleSeries = series.filter((s) => !hidden.has(s.club.id) && s.shots.length > 0);
+  const allVisibleShots = visibleSeries.flatMap((s) => s.shots);
+
+  if (series.every((s) => s.shots.length === 0)) {
     return <p>方向と飛距離の両方が記録されたショットがまだありません。</p>;
   }
 
-  const distances = plottable.map((s) => s.carryDistanceYds!);
-  const rawMin = Math.min(...distances);
-  const rawMax = Math.max(...distances);
-  const step = niceStep(Math.max(rawMax - rawMin, 1));
-  const yMin = Math.floor(rawMin / step) * step - step;
-  const yMax = Math.ceil(rawMax / step) * step + step;
+  const maxDistance = allVisibleShots.length > 0 ? Math.max(...allVisibleShots.map((s) => s.carryDistanceYds!)) : 250;
+  const yMax = Math.ceil((maxDistance * 1.08) / 10) * 10;
+  const yStep = niceStep(yMax);
 
-  const colWidth = PLOT_W / DIRECTION_ORDER.length;
-  const xForDirection = (d: ShotDirection) => MARGIN.left + (DIRECTION_ORDER.indexOf(d) + 0.5) * colWidth;
-  const yForDistance = (yds: number) => MARGIN.top + PLOT_H * (1 - (yds - yMin) / (yMax - yMin));
+  const maxLateral = allVisibleShots.length > 0 ? Math.max(...allVisibleShots.map((s) => Math.abs(lateralYds(s)!))) : 20;
+  const xHalfRange = Math.max(25, Math.ceil((maxLateral * 1.2) / 5) * 5);
 
-  const gridlines: number[] = [];
-  for (let v = Math.ceil(yMin / step) * step; v <= yMax; v += step) gridlines.push(v);
+  const xForLateral = (yds: number) => MARGIN.left + PLOT_W * ((yds + xHalfRange) / (xHalfRange * 2));
+  const yForDistance = (yds: number) => MARGIN.top + PLOT_H * (1 - yds / yMax);
+
+  const yGridlines: number[] = [];
+  for (let v = yStep; v <= yMax; v += yStep) yGridlines.push(v);
 
   return (
-    <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="方向と飛距離の散布図" className="shot-scatter-svg">
-      {/* horizontal gridlines + y-axis labels */}
-      {gridlines.map((v) => (
-        <g key={v}>
-          <line
-            x1={MARGIN.left}
-            x2={WIDTH - MARGIN.right}
-            y1={yForDistance(v)}
-            y2={yForDistance(v)}
-            stroke="#eee"
-            strokeWidth={1}
-          />
-          <text x={MARGIN.left - 8} y={yForDistance(v)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="#888">
-            {v}y
-          </text>
-        </g>
-      ))}
+    <div>
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="クラブ別ショット分布図" className="shot-scatter-svg">
+        {/* fairway-style background band around the target line */}
+        <rect
+          x={xForLateral(-xHalfRange * 0.35)}
+          y={MARGIN.top}
+          width={xForLateral(xHalfRange * 0.35) - xForLateral(-xHalfRange * 0.35)}
+          height={PLOT_H}
+          fill="#eef7ee"
+        />
 
-      {/* center "straight" reference line */}
-      <line
-        x1={xForDirection('STRAIGHT')}
-        x2={xForDirection('STRAIGHT')}
-        y1={MARGIN.top}
-        y2={MARGIN.top + PLOT_H}
-        stroke="#ddd"
-        strokeWidth={1}
-        strokeDasharray="3 3"
-      />
+        {yGridlines.map((v) => (
+          <g key={v}>
+            <line x1={MARGIN.left} x2={WIDTH - MARGIN.right} y1={yForDistance(v)} y2={yForDistance(v)} stroke="#e5e5e5" strokeWidth={1} />
+            <text x={MARGIN.left - 8} y={yForDistance(v)} textAnchor="end" dominantBaseline="middle" fontSize={11} fill="#888">
+              {v}y
+            </text>
+          </g>
+        ))}
 
-      {/* x-axis category labels */}
-      {DIRECTION_ORDER.map((d) => (
-        <text
-          key={d}
-          x={xForDirection(d)}
-          y={MARGIN.top + PLOT_H + 20}
-          textAnchor="middle"
-          fontSize={11}
-          fill="#888"
-        >
-          {d}
-        </text>
-      ))}
+        {/* target line: straight up from the tee */}
+        <line x1={xForLateral(0)} x2={xForLateral(0)} y1={MARGIN.top} y2={MARGIN.top + PLOT_H} stroke="#bbb" strokeWidth={1} strokeDasharray="3 3" />
+        {/* tee position */}
+        <circle cx={xForLateral(0)} cy={yForDistance(0)} r={4} fill="#555" />
 
-      {/* shots, jittered within their direction column so overlapping balls stay visible */}
-      {plottable.map((s) => {
-        const cx = xForDirection(s.direction!) + stableJitter(s.id) * (colWidth * 0.32);
-        const cy = yForDistance(s.carryDistanceYds!);
-        return (
-          <circle key={s.id} cx={cx} cy={cy} r={5} fill="#2c7a4b" fillOpacity={0.75} stroke="#1e5a37" strokeWidth={1}>
-            <title>
-              {Math.round(s.carryDistanceYds!)}y / {s.direction} / {new Date(s.recordedAt).toLocaleDateString('ja-JP')}
-            </title>
-          </circle>
-        );
-      })}
-    </svg>
+        {visibleSeries.map(({ club, color, shots }) =>
+          shots.map((s) => (
+            <circle
+              key={s.id}
+              cx={xForLateral(lateralYds(s)!)}
+              cy={yForDistance(s.carryDistanceYds!)}
+              r={5}
+              fill={color}
+              fillOpacity={0.75}
+              stroke={color}
+              strokeWidth={1}
+            >
+              <title>
+                {club.name}: {Math.round(s.carryDistanceYds!)}y / {s.direction} / {new Date(s.recordedAt).toLocaleDateString('ja-JP')}
+              </title>
+            </circle>
+          )),
+        )}
+      </svg>
+
+      <div className="shot-scatter-legend">
+        {series.map(({ club, color, shots }) => (
+          <label key={club.id} className="shot-scatter-legend-item" style={{ opacity: shots.length === 0 ? 0.4 : 1 }}>
+            <input
+              type="checkbox"
+              checked={!hidden.has(club.id)}
+              disabled={shots.length === 0}
+              onChange={() => toggle(club.id)}
+            />
+            <span className="legend-swatch" style={{ background: color }} />
+            {club.name}
+            <span className="legend-count">({shots.length})</span>
+          </label>
+        ))}
+      </div>
+    </div>
   );
 }

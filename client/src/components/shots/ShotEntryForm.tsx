@@ -5,6 +5,10 @@ import type { NewShotInput } from '../../hooks/useShots';
 
 const DIRECTIONS: ShotDirection[] = ['STRAIGHT', 'DRAW', 'FADE', 'PULL', 'PUSH', 'SLICE', 'HOOK'];
 
+const DISTANCE_MIN = 0;
+const DISTANCE_MAX = 300;
+const DEFAULT_DISTANCE = '150';
+
 export function ShotEntryForm({
   clubs,
   onSubmit,
@@ -14,7 +18,7 @@ export function ShotEntryForm({
 }) {
   const activeClubs = clubs.filter((c) => c.isActive ?? true);
   const [clubId, setClubId] = useState(activeClubs[0]?.id ?? '');
-  const [carryDistanceYds, setCarryDistanceYds] = useState('');
+  const [carryDistanceYds, setCarryDistanceYds] = useState(DEFAULT_DISTANCE);
   const [direction, setDirection] = useState<ShotDirection>('STRAIGHT');
   const [voiceText, setVoiceText] = useState('');
   const [unparsedNote, setUnparsedNote] = useState('');
@@ -28,7 +32,8 @@ export function ShotEntryForm({
     if (!voiceText.trim()) return;
     const parsed = parseShotText(voiceText);
     if (parsed.distanceYds != null) {
-      setCarryDistanceYds(String(parsed.distanceYds));
+      const clamped = Math.min(DISTANCE_MAX, Math.max(DISTANCE_MIN, parsed.distanceYds));
+      setCarryDistanceYds(String(clamped));
     }
     if (parsed.direction != null) {
       setDirection(parsed.direction);
@@ -47,13 +52,13 @@ export function ShotEntryForm({
     if (!clubId) return;
     onSubmit({
       clubId,
-      carryDistanceYds: carryDistanceYds ? parseFloat(carryDistanceYds) : undefined,
+      carryDistanceYds: parseFloat(carryDistanceYds),
       direction,
       shotShapeNotes: unparsedNote || undefined,
     });
     // Reset distance/direction/text but keep the same club selected, since
     // the common workflow is logging many balls in a row with one club.
-    setCarryDistanceYds('');
+    setCarryDistanceYds(DEFAULT_DISTANCE);
     setDirection('STRAIGHT');
     setVoiceText('');
     setUnparsedNote('');
@@ -90,8 +95,12 @@ export function ShotEntryForm({
 
       <label>
         飛距離(ヤード)
+        <span className="distance-readout">{carryDistanceYds}y</span>
         <input
-          type="number"
+          type="range"
+          min={DISTANCE_MIN}
+          max={DISTANCE_MAX}
+          step={1}
           value={carryDistanceYds}
           onChange={(e) => setCarryDistanceYds(e.target.value)}
         />

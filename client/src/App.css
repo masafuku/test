@@ -49,6 +49,12 @@
   font-size: 0.9rem;
 }
 
+.distance-readout {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c7a4b;
+}
+
 .club-list {
   list-style: none;
   padding: 0;
@@ -141,4 +147,31 @@
 .shot-scatter-svg {
   width: 100%;
   height: auto;
+}
+
+.shot-scatter-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  margin-top: 0.75rem;
+  justify-content: center;
+}
+
+.shot-scatter-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-count {
+  color: #888;
 }

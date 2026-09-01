@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useClubs } from '../hooks/useClubs';
 import { useShots } from '../hooks/useShots';
 import { ClubStatsCard } from '../components/stats/ClubStatsCard';
@@ -11,15 +10,12 @@ const CATEGORY_ORDER = ['DRIVER', 'WOOD', 'HYBRID', 'IRON', 'WEDGE', 'PUTTER', '
 export function DashboardPage() {
   const { clubs, loading: clubsLoading } = useClubs();
   const { shots, loading: shotsLoading, shotsForClub } = useShots();
-  const [scatterClubId, setScatterClubId] = useState<string>('');
 
   if (clubsLoading || shotsLoading) return <p>読み込み中...</p>;
 
   const activeClubs = clubs
     .filter((c) => c.isActive ?? true)
     .sort((a, b) => CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category));
-
-  const scatterClub = activeClubs.find((c) => c.id === scatterClubId) ?? activeClubs[0];
 
   const clubStatsForGapping = activeClubs
     .map((club) => {
@@ -46,17 +42,8 @@ export function DashboardPage() {
 
       {activeClubs.length > 0 && (
         <div className="shot-scatter">
-          <h3>
-            散布図
-            <select value={scatterClub?.id ?? ''} onChange={(e) => setScatterClubId(e.target.value)}>
-              {activeClubs.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </h3>
-          {scatterClub && <ShotScatterChart shots={shotsForClub(scatterClub.id)} />}
+          <h3>散布図(クラブ別)</h3>
+          <ShotScatterChart clubs={activeClubs} shotsForClub={shotsForClub} />
         </div>
       )}
     </section>
