@@ -4,24 +4,32 @@
 
 ## スタック
 
-- フロントエンド: React + Vite + TypeScript
-- バックエンド: AWS Amplify Gen2(Cognito認証 + AppSync/DynamoDB)
-- ホスティング: AWS Lightsail(Ubuntu + nginx)に静的ビルドを配信
+- フロントエンド: React + Vite + TypeScript(`client/`)
+- バックエンド: Node.js + Express + SQLite(Drizzle ORM + libSQL)(`server/`)
+- ホスティング: AWS Lightsail(Ubuntu + nginx + pm2)に相乗り。認証はnginx Basic認証
+
+npm workspaces構成(`client/` + `server/`)。認証・データストアはすべて自前のLightsailインスタンス内で完結し、外部のAWS API(IAMキー等)は一切不要。
 
 ## セットアップ
 
 ```bash
 npm install
-npx ampx sandbox   # AWS認証情報が必要。Cognito/AppSync/DynamoDBを個人サンドボックスに構築し amplify_outputs.json を生成する
-npm run dev
+npm run db:push      # SQLiteスキーマを作成(server/data.db)
 ```
 
-`amplify_outputs.json` は `ampx sandbox`(または本番デプロイ)が生成する環境固有の設定ファイルで、Gitには含めない。リポジトリにはビルドを通すためのプレースホルダーのみ置いている。
+2つのターミナルで:
+
+```bash
+npm run dev:server   # http://localhost:4002
+npm run dev:client   # http://localhost:5173 (/api は dev:server にプロキシ)
+```
+
+ブラウザで http://localhost:5173 を開く。
 
 ## テスト
 
 ```bash
-npm test    # 統計・音声テキスト解析ロジックのユニットテスト(Vitest)
+npm test    # 統計・音声テキスト解析ロジックのユニットテスト(Vitest、client workspace)
 npm run build
 ```
 
@@ -34,45 +42,62 @@ npm run build
 
 ## デプロイ(Lightsail)
 
-フロントの静的配信のみLightsailで行う。認証・データ(Cognito/AppSync/DynamoDB)はAmplify側のまま。
+同じLightsailインスタンスに既存の`toeic-master`アプリ(ポート4001, pm2管理)が相乗りしている。golf-appは**ポート4002**、pm2プロセス名`golf-app`、nginxの`/golf/`パス配下で同様に相乗りする。
 
 ### Lightsailインスタンスの初回セットアップ
 
-自分の端末からSSHで接続して実施する(このリポジトリの作業環境からは、鍵もサーバーへの経路も無いため実行できない):
+自分の端末からSSHで接続して実施する:
 
 ```bash
 ssh -i ~/.ssh/LightsailDefaultKey-ap-northeast-1.pem ubuntu@<インスタンスのIP>
-sudo apt update && sudo apt install -y nginx
 ```
 
-Lightsailコンソールのネットワーキングタブで、インスタンスのファイアウォールにHTTP(80番)を開放しておく。
+nginx・pm2・Node.jsは既に導入済み(toeic-master用)。golf-appのリポジトリを配置:
 
 ```bash
-sudo mkdir -p /var/www/golf-app && sudo chown ubuntu:ubuntu /var/www/golf-app
-sudo cp deploy/nginx.conf.example /etc/nginx/sites-available/golf-app
-sudo ln -s /etc/nginx/sites-available/golf-app /etc/nginx/sites-enabled/golf-app
-sudo rm -f /etc/nginx/sites-enabled/default
+mkdir -p ~/apps && cd ~/apps
+git clone https://github.com/masafuku/test.git golf-app
+cd golf-app
+npm install
+npm run db:push
+```
+
+Basic認証ユーザーを追加(既存`/realestate/`と同じhtpasswdファイルに追記):
+
+```bash
+sudo htpasswd /etc/nginx/.htpasswd golf
+```
+
+nginxの`default`サイト(`/etc/nginx/sites-available/default`)に`/golf/`ロケーションを追記する。書式は`deploy/nginx.conf.example`を参照(`/toeic/`ブロックと同じreverse proxyパターン + Basic認証)。
+
+```bash
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-(`deploy/nginx.conf.example` を先にこのリポジトリからサーバーにコピーしておくか、`scp` で転送してから上記を実行する)
-
-### デプロイ手順(更新のたびに、ローカル端末で)
-
-1. 本番用の `amplify_outputs.json` を用意する(sandbox用ではなく本番Amplifyバックエンドのもの): `npx ampx generate outputs --branch <本番ブランチ> --app-id <Amplify App ID>`
-2. `deploy/deploy.sh` を実行(内部で `npm run build` → `rsync` を行う)
+初回起動:
 
 ```bash
-LIGHTSAIL_HOST=ubuntu@<インスタンスのIP> ./deploy/deploy.sh
+VITE_BASE_PATH=/golf/ npm run build
+pm2 start server/dist/index.js --name golf-app
+pm2 save
 ```
 
-`LIGHTSAIL_SSH_KEY`(デフォルト `~/.ssh/LightsailDefaultKey-ap-northeast-1.pem`)や `LIGHTSAIL_REMOTE_DIR` も環境変数で上書き可能。
+### デプロイ手順(更新のたびに、Lightsailインスタンス上で)
+
+```bash
+cd ~/apps/golf-app
+./deploy/deploy.sh
+```
+
+内部で`git pull` → `npm install` → `VITE_BASE_PATH=/golf/`でのビルド → `npm run db:push`(既存データは壊さない) → `pm2 restart golf-app`を行う。
 
 ### 制約
 
-- ドメインが無いため現状は平文HTTP配信。Cognito/AppSyncへの通信自体はブラウザから直接AWSのHTTPSエンドポイントに送られるが、将来ドメインを用意できたらLet's EncryptでHTTPS化することを推奨する
+- ドメインが無いため現状は平文HTTP配信。将来ドメインを用意できたらLet's EncryptでHTTPS化することを推奨する
+- 認証はnginx Basic認証のみ(ゴルフスコアという機密性の低いデータのため、この程度の保護で許容)
+- SQLiteデータ(`server/data.db`)はLightsailインスタンス内のみに存在し、バックアップは別途検討すること
 - CI連携はまだ無く、手動デプロイのみ
 
 ## 将来の拡張(未実装)
 
-Toptracer等のランチモニターとの連携は、個人向け公開APIが存在しないため見送っている。`ShotRecord.source`/`externalId` フィールドは将来のCSVインポート等の拡張に備えて用意してある。
+Toptracer等のランチモニターとの連携は、個人向け公開APIが存在しないため見送っている。`ShotRecord.externalId`フィールドは将来のCSVインポート等の拡張に備えて用意してある。

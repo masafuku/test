@@ -1,34 +1,33 @@
-# nginx config for serving the built SPA on the Lightsail instance.
+# Snippet to ADD into the Lightsail instance's existing `default` nginx site
+# (/etc/nginx/sites-available/default), inside its `server { listen 80; ... }`
+# block — alongside the /realestate/ and /toeic/ locations already there.
+# Do NOT create a separate sites-enabled file for this; the instance already
+# has a single default_server on port 80 serving multiple apps by path.
 #
-# Install: sudo cp deploy/nginx.conf.example /etc/nginx/sites-available/golf-app
-#          sudo ln -s /etc/nginx/sites-available/golf-app /etc/nginx/sites-enabled/golf-app
-#          sudo rm -f /etc/nginx/sites-enabled/default   # avoid the stock site colliding on port 80
-#          sudo nginx -t && sudo systemctl reload nginx
+# Placeholders to fill in during deployment:
+#   <APP_PORT>  - the golf-app Express server's port (4002 by default, see
+#                 server/src/index.ts / PORT env var)
 #
-# No domain is configured yet, so this serves plain HTTP on the instance's
-# IP. If a domain is later pointed at this instance, switch to certbot
-# (Let's Encrypt) and redirect :80 to :443.
-
-server {
-    listen 80;
-    listen [::]:80;
-    server_name _;
-
-    root /var/www/golf-app;
-    index index.html;
-
-    # SPA fallback: any path that isn't a real file resolves to index.html,
-    # so client-side routing / deep links (e.g. a reload on a sub-page)
-    # don't 404.
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Hashed asset filenames from the Vite build are safe to cache
-    # aggressively; index.html itself is not (it must always be revalidated
-    # so a new deploy is picked up on next load).
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
+# Basic auth setup (one-time, mirrors the existing /realestate/ protection):
+#   sudo htpasswd /etc/nginx/.htpasswd golf   # prompts for a password; reuses
+#                                              # the same htpasswd file as /realestate/
+#
+# location /golf/ {
+#     auth_basic "Restricted";
+#     auth_basic_user_file /etc/nginx/.htpasswd;
+#
+#     proxy_pass http://127.0.0.1:<APP_PORT>/;
+#     proxy_http_version 1.1;
+#     proxy_set_header Host $host;
+#     proxy_set_header X-Real-IP $remote_addr;
+#     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#     proxy_set_header X-Forwarded-Proto $scheme;
+# }
+#
+# The trailing slash on both `location /golf/` and `proxy_pass .../`  strips
+# the /golf/ prefix before forwarding, so the Express app (server/src/index.ts)
+# doesn't need to know about it — it serves everything at its own root. The
+# client build must still be built with VITE_BASE_PATH=/golf/ (see
+# deploy/deploy.sh) so the browser's asset requests carry the /golf/ prefix.
+#
+# After adding the block: sudo nginx -t && sudo systemctl reload nginx
