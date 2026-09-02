@@ -6,6 +6,12 @@ import './App.css';
 
 type Tab = 'shots' | 'dashboard' | 'clubs';
 
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: 'shots', label: 'ショット', icon: '⛳' },
+  { id: 'dashboard', label: 'ダッシュボード', icon: '📊' },
+  { id: 'clubs', label: 'クラブ', icon: '🏌️' },
+];
+
 function App() {
   const [tab, setTab] = useState<Tab>('shots');
 
@@ -13,23 +19,24 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>My Golf Log</h1>
-        <nav>
-          <button className={tab === 'shots' ? 'active' : ''} onClick={() => setTab('shots')}>
-            ショット入力
-          </button>
-          <button className={tab === 'dashboard' ? 'active' : ''} onClick={() => setTab('dashboard')}>
-            ダッシュボード
-          </button>
-          <button className={tab === 'clubs' ? 'active' : ''} onClick={() => setTab('clubs')}>
-            クラブ管理
-          </button>
-        </nav>
       </header>
-      <main>
+      <main className="app-main">
         {tab === 'shots' && <ShotEntryPage />}
         {tab === 'dashboard' && <DashboardPage />}
         {tab === 'clubs' && <ClubsPage />}
       </main>
+      <nav className="tab-bar">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`tab-bar-item${tab === t.id ? ' active' : ''}`}
+            onClick={() => setTab(t.id)}
+          >
+            <span className="tab-bar-icon">{t.icon}</span>
+            <span className="tab-bar-label">{t.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

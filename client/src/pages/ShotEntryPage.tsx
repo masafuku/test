@@ -32,7 +32,10 @@ export function ShotEntryPage() {
     <section>
       <h2>ショット入力</h2>
       <a href={shortcutUrl} className="shortcut-launch-button">
-        🎤 音声で記録(ショートカット起動)
+        <span>
+          <span className="shortcut-launch-icon">🎤</span>
+          音声で記録
+        </span>
       </a>
       <ShotEntryForm clubs={clubs} onSubmit={addShot} />
       <h3>最近のショット</h3>

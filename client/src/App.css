@@ -1,71 +1,151 @@
+:root {
+  --accent: #2c7a4b;
+  --accent-bg: #eef7ee;
+  --bg: #f2f2f7;
+  --card-bg: #ffffff;
+  --border: #e5e5ea;
+  --text-secondary: #8e8e93;
+  --radius: 14px;
+}
+
 .app {
-  max-width: 720px;
+  max-width: 480px;
   margin: 0 auto;
-  padding: 1rem;
-  font-family: system-ui, sans-serif;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    sans-serif;
   /* Disable double-tap-to-zoom (iOS Safari default) while still allowing
      pinch-zoom and normal scrolling — avoids accidental zoom when tapping
      table headers / legend checkboxes in quick succession. */
   touch-action: manipulation;
 }
 
+/* iOS "large title" style header: sticky, translucent, blurred. */
 .app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: calc(env(safe-area-inset-top) + 0.75rem) 1rem 0.75rem;
+  background: rgba(242, 242, 247, 0.85);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1rem 1rem calc(env(safe-area-inset-bottom) + 5.5rem);
+}
+
+/* Fixed bottom tab bar, iOS-style. */
+.tab-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  max-width: 480px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.tab-bar-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.app-header nav {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.app-header nav button {
-  flex: 1;
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background: #f5f5f5;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0 0.4rem;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
-.app-header nav button.active {
-  background: #2c7a4b;
-  color: white;
-  border-color: #2c7a4b;
+.tab-bar-item.active {
+  color: var(--accent);
 }
 
-/* Deep-links into the Siri Shortcut (shortcuts://run-shortcut?name=...) so
-   voice entry can start without leaving the app first. iOS-only by nature —
-   harmless no-op tap on desktop/Android, so no feature-detection needed. */
+.tab-bar-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.tab-bar-label {
+  font-size: 0.7rem;
+}
+
+section > h2 {
+  font-size: 1.15rem;
+  margin: 0 0 0.75rem;
+}
+
+section > h3 {
+  font-size: 1rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+/* Large circular voice-entry button — the primary way shots get logged. */
 .shortcut-launch-button {
-  display: block;
-  text-align: center;
-  padding: 0.75rem;
-  margin: 1rem 0;
-  background: #2c7a4b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 132px;
+  margin: 0.5rem auto 1.5rem;
+  border-radius: 50%;
+  background: var(--accent);
   color: white;
-  border-radius: 8px;
+  font-size: 0.95rem;
   font-weight: 600;
+  text-align: center;
   text-decoration: none;
+  box-shadow: 0 8px 20px rgba(44, 122, 75, 0.35);
+  line-height: 1.3;
+}
+
+.shortcut-launch-button:active {
+  transform: scale(0.97);
+}
+
+.shortcut-launch-icon {
+  display: block;
+  font-size: 2.4rem;
+  margin-bottom: 0.15rem;
 }
 
 .club-form,
 .shot-entry-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin: 1rem 0;
-  max-width: 420px;
+  gap: 0.85rem;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 0 0 1rem;
 }
 
 .club-form label,
 .shot-entry-form label {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.9rem;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
 /* iOS Safari auto-zooms the page when focusing any form control whose
@@ -78,12 +158,17 @@
 .shot-entry-form select,
 .shot-entry-form textarea {
   font-size: 16px;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: #000;
 }
 
 .distance-readout {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #2c7a4b;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
 }
 
 /* Tap-friendly button groups (club / lie / strength / direction pickers),
@@ -96,11 +181,12 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
 }
 
 .chip-fieldset legend {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
   padding: 0;
 }
 
@@ -112,30 +198,53 @@
 
 .chip-button {
   padding: 0.5rem 0.9rem;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: #f5f5f5;
+  background: var(--bg);
   font-size: 0.9rem;
   cursor: pointer;
+  color: #000;
 }
 
 .chip-button.active {
-  background: #2c7a4b;
+  background: var(--accent);
   color: white;
-  border-color: #2c7a4b;
+  border-color: var(--accent);
+}
+
+.shot-entry-form button[type='submit'] {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shot-entry-form button[type='submit']:disabled {
+  opacity: 0.5;
 }
 
 .club-list {
   list-style: none;
-  padding: 0;
+  padding: 0.25rem 1rem;
+  margin: 0 0 1rem;
+  background: var(--card-bg);
+  border-radius: var(--radius);
 }
 
 .club-list li {
   display: flex;
   gap: 1rem;
   align-items: center;
-  padding: 0.4rem 0;
-  border-bottom: 1px solid #eee;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.club-list li:last-child {
+  border-bottom: none;
 }
 
 .club-list li.inactive {
@@ -143,14 +252,15 @@
 }
 
 .club-list .category {
-  color: #888;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
 .club-stats-table-wrap {
   overflow-x: auto;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
 }
 
 .club-stats-table {
@@ -161,17 +271,16 @@
 
 .club-stats-table th,
 .club-stats-table td {
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid #eee;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .club-stats-table thead th {
   text-align: left;
-  color: #888;
+  color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.8rem;
-  background: #fafafa;
 }
 
 .club-stats-table thead th.sortable {
@@ -180,7 +289,7 @@
 }
 
 .club-stats-table thead th.sortable:hover {
-  color: #2c7a4b;
+  color: var(--accent);
 }
 
 .club-stats-table .sort-arrow {
@@ -208,12 +317,12 @@
 }
 
 .insight-badge {
-  background: #eef7ee;
-  border-left: 3px solid #2c7a4b;
-  padding: 0.5rem 0.75rem;
-  margin: 0.4rem 0;
+  background: var(--accent-bg);
+  border-left: 3px solid var(--accent);
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0;
   font-size: 0.9rem;
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .parse-warning {
@@ -224,21 +333,23 @@
 .shot-history-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
 .shot-history-table th,
 .shot-history-table td {
   text-align: left;
-  padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid #eee;
-  font-size: 0.9rem;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
 }
 
 .shot-scatter {
   margin-top: 1.5rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
   padding: 1rem;
 }
 
@@ -279,5 +390,5 @@
 }
 
 .legend-count {
-  color: #888;
+  color: var(--text-secondary);
 }

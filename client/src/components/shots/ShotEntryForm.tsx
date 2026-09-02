@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { Club, ShotDirection, ShotLie, ShotStrength } from '../../types/models';
 import { matchClubFromText, parseShotText } from '../../lib/parseShotText';
 import { STRENGTH_OPTIONS, LIE_OPTIONS } from '../../lib/shotLabels';
@@ -66,15 +66,6 @@ export function ShotEntryForm({
   const [nothingRecognized, setNothingRecognized] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const voiceInputRef = useRef<HTMLInputElement>(null);
-
-  // Focus the voice/text field on mount so the iOS keyboard (and its 🎤
-  // dictation button) is one tap away instead of two — the user only has to
-  // tap once on whatever surface brought them here (e.g. the ショット入力 tab)
-  // rather than tap-to-focus-the-field, then tap-the-mic-icon.
-  useEffect(() => {
-    voiceInputRef.current?.focus();
-  }, []);
 
   // Free-text field meant to be filled via the iPhone keyboard's built-in
   // dictation (mic button) — this app never talks to a speech-recognition
@@ -168,10 +159,6 @@ export function ShotEntryForm({
       setLateralDeviationYds(undefined);
       setVoiceText('');
       setNothingRecognized(false);
-      // Refocus for the next shot — still inside the same user-gesture call
-      // chain (this handler was triggered by the tap/Enter that submitted),
-      // so iOS generally still allows the keyboard to reopen here.
-      voiceInputRef.current?.focus();
     } catch {
       setSubmitError('保存に失敗しました。電波を確認してもう一度お試しください。');
     } finally {
@@ -184,7 +171,6 @@ export function ShotEntryForm({
       <label>
         音声/テキスト入力(マイクで話す、例:「7番アイアン、ラフからハーフで150ヤード、ちょっと右5ヤード」)
         <input
-          ref={voiceInputRef}
           type="text"
           value={voiceText}
           onChange={(e) => setVoiceText(e.target.value)}
