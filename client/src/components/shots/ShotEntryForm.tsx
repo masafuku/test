@@ -74,10 +74,20 @@ export function ShotEntryForm({
   // club list (see matchClubFromText — needs `clubs`, so it can't live in
   // the text-only parseShotText). Anything not recognized just leaves the
   // current tap-selection untouched, so tapping can always override.
-  function handleVoiceTextBlur() {
-    if (!voiceText.trim()) return;
-    const parsed = parseShotText(voiceText);
-    const matchedClub = matchClubFromText(voiceText, activeClubs);
+  //
+  // Returns the resolved field values rather than only calling setState:
+  // setState wouldn't be visible to the caller until the next render, so
+  // handleSubmit (which needs the parsed values *immediately*, not on the
+  // next render) computes from this return value directly. This matters
+  // because onBlur is not guaranteed to fire before submit — e.g. typing
+  // the text and pressing Enter, or clicking "記録する" without first
+  // tapping/clicking elsewhere to blur the field, submits the form while
+  // the input still has focus and no blur event ever ran. Relying on blur
+  // alone silently dropped the parsed club/strength/lie/etc. in that case.
+  function applyVoiceText(text: string) {
+    if (!text.trim()) return null;
+    const parsed = parseShotText(text);
+    const matchedClub = matchClubFromText(text, activeClubs);
 
     if (parsed.distanceYds != null) {
       const clamped = Math.min(DISTANCE_MAX, Math.max(DISTANCE_MIN, parsed.distanceYds));
@@ -89,28 +99,50 @@ export function ShotEntryForm({
     if (parsed.lie != null) setLie(parsed.lie);
     if (matchedClub != null) setClubId(matchedClub.id);
 
-    setNothingRecognized(
+    const recognizedNothing =
       parsed.distanceYds == null &&
-        parsed.direction == null &&
-        parsed.strength == null &&
-        parsed.lie == null &&
-        matchedClub == null,
-    );
+      parsed.direction == null &&
+      parsed.strength == null &&
+      parsed.lie == null &&
+      matchedClub == null;
+    setNothingRecognized(recognizedNothing);
+
+    return { parsed, matchedClub };
+  }
+
+  function handleVoiceTextBlur() {
+    applyVoiceText(voiceText);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!clubId || submitting) return;
+    if (submitting) return;
+
+    // Parse now (not just on blur — see applyVoiceText's comment) so a
+    // dictated club/strength/lie/etc. is never silently dropped just
+    // because the field never lost focus before submitting.
+    const result = applyVoiceText(voiceText);
+    const finalClubId = result?.matchedClub?.id ?? clubId;
+    const finalStrength = result?.parsed.strength ?? strength;
+    const finalLie = result?.parsed.lie ?? (lie || undefined);
+    const finalDirection = result?.parsed.direction ?? direction;
+    const finalLateralDeviationYds = result?.parsed.lateralDeviationYds ?? lateralDeviationYds;
+    const finalDistance =
+      result?.parsed.distanceYds != null
+        ? Math.min(DISTANCE_MAX, Math.max(DISTANCE_MIN, result.parsed.distanceYds))
+        : parseFloat(carryDistanceYds);
+
+    if (!finalClubId) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
       await onSubmit({
-        clubId,
-        strength,
-        lie: lie || undefined,
-        carryDistanceYds: parseFloat(carryDistanceYds),
-        direction,
-        lateralDeviationYds,
+        clubId: finalClubId,
+        strength: finalStrength,
+        lie: finalLie,
+        carryDistanceYds: finalDistance,
+        direction: finalDirection,
+        lateralDeviationYds: finalLateralDeviationYds,
         // Always keep the original dictated text, even when everything else
         // parsed fine — the parsing is best-effort keyword matching, not
         // real language understanding, so this is the only way to check
