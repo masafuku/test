@@ -19,13 +19,19 @@ export function ShotEntryPage() {
     return <p>先に「クラブ管理」ページでクラブを登録してください。</p>;
   }
 
+  // x-callback-url: after the Shortcut finishes (success, error, or the user
+  // cancels), iOS automatically reopens this same page in Safari instead of
+  // leaving the Shortcuts app in the foreground. No change to the Shortcut
+  // itself needed — this is handled entirely by which URL scheme we link to.
+  const returnUrl = encodeURIComponent(window.location.href);
+  const shortcutUrl =
+    `shortcuts://x-callback-url/run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}` +
+    `&x-success=${returnUrl}&x-error=${returnUrl}&x-cancel=${returnUrl}`;
+
   return (
     <section>
       <h2>ショット入力</h2>
-      <a
-        href={`shortcuts://run-shortcut?name=${encodeURIComponent(SHORTCUT_NAME)}`}
-        className="shortcut-launch-button"
-      >
+      <a href={shortcutUrl} className="shortcut-launch-button">
         🎤 音声で記録(ショートカット起動)
       </a>
       <ShotEntryForm clubs={clubs} onSubmit={addShot} />
