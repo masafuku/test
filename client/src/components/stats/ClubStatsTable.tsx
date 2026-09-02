@@ -30,7 +30,15 @@ const SORTABLE_COLUMNS: { key: SortKey; label: string }[] = [
  * rather than requiring a card-by-card read. Column headers are clickable to
  * sort; "方向の傾向" is a composite label so it's excluded from sorting.
  */
-export function ClubStatsTable({ clubs, shotsForClub }: { clubs: Club[]; shotsForClub: (clubId: string) => ShotRecord[] }) {
+export function ClubStatsTable({
+  clubs,
+  shotsForClub,
+  onSelectClub,
+}: {
+  clubs: Club[];
+  shotsForClub: (clubId: string) => ShotRecord[];
+  onSelectClub?: (clubId: string) => void;
+}) {
   const [sortKey, setSortKey] = useState<SortKey>('default');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
@@ -90,7 +98,15 @@ export function ClubStatsTable({ clubs, shotsForClub }: { clubs: Club[]; shotsFo
         <tbody>
           {sortedRows.map(({ club, distanceStats, tendency }) => (
             <tr key={club.id}>
-              <th scope="row">{club.name}</th>
+              <th scope="row">
+                {distanceStats && onSelectClub ? (
+                  <button type="button" className="club-name-button" onClick={() => onSelectClub(club.id)}>
+                    {club.name}
+                  </button>
+                ) : (
+                  club.name
+                )}
+              </th>
               {distanceStats ? (
                 <>
                   <td>{distanceStats.sampleSize}</td>

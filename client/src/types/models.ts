@@ -8,6 +8,16 @@ export type ShotStrength = 'FULL' | 'HALF' | 'PITCH_AND_RUN' | 'LOB' | 'RUNNING'
 
 export type ShotLie = 'TEE' | 'FAIRWAY' | 'ROUGH' | 'APPROACH';
 
+export type SessionType = 'RANGE' | 'COURSE';
+
+export interface Session {
+  id: string;
+  type: SessionType;
+  label?: string | null;
+  startedAt: string;
+  endedAt?: string | null;
+}
+
 export interface Club {
   id: string;
   name: string;
@@ -32,6 +42,7 @@ export interface ShotRecord {
   externalId?: string | null;
   recordedAt: string;
   sessionLabel?: string | null;
+  sessionId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { ClubsPage } from './pages/ClubsPage';
 import { ShotEntryPage } from './pages/ShotEntryPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { SettingsPage } from './pages/SettingsPage';
 import './App.css';
 
-type Tab = 'shots' | 'dashboard' | 'clubs';
+type Tab = 'shots' | 'dashboard' | 'settings';
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'shots', label: 'ショット', icon: '⛳' },
   { id: 'dashboard', label: 'ダッシュボード', icon: '📊' },
-  { id: 'clubs', label: 'クラブ', icon: '🏌️' },
+  { id: 'settings', label: '設定', icon: '⚙️' },
 ];
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
       <main className="app-main">
         {tab === 'shots' && <ShotEntryPage />}
         {tab === 'dashboard' && <DashboardPage />}
-        {tab === 'clubs' && <ClubsPage />}
+        {tab === 'settings' && <SettingsPage />}
       </main>
       <nav className="tab-bar">
         {TABS.map((t) => (

@@ -1,4 +1,14 @@
-import type { Club, ClubCategory, ShotDirection, ShotLie, ShotRecord, ShotSource, ShotStrength } from '../types/models';
+import type {
+  Club,
+  ClubCategory,
+  Session,
+  SessionType,
+  ShotDirection,
+  ShotLie,
+  ShotRecord,
+  ShotSource,
+  ShotStrength,
+} from '../types/models';
 
 // import.meta.env.BASE_URL already ends with "/" (Vite's `base` config), so this
 // resolves correctly whether the app is served at site root or under a subpath
@@ -43,4 +53,10 @@ export const api = {
       body: JSON.stringify({ ...input, recordedAt: input.recordedAt ?? new Date().toISOString(), source: input.source ?? 'MANUAL' }),
     }),
   deleteShot: (id: string) => request<void>(`/shots/${id}`, { method: 'DELETE' }),
+
+  listSessions: () => request<Session[]>('/sessions'),
+  getCurrentSession: () => request<Session | null>('/sessions/current'),
+  startSession: (type: SessionType, label?: string) =>
+    request<Session>('/sessions', { method: 'POST', body: JSON.stringify({ type, label }) }),
+  endSession: (id: string) => request<Session>(`/sessions/${id}/end`, { method: 'PATCH' }),
 };

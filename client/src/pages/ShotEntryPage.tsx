@@ -1,7 +1,9 @@
 import { useClubs } from '../hooks/useClubs';
 import { useShots } from '../hooks/useShots';
+import { useSessions } from '../hooks/useSessions';
 import { ShotEntryForm } from '../components/shots/ShotEntryForm';
 import { ShotHistoryTable } from '../components/shots/ShotHistoryTable';
+import { SessionBar } from '../components/sessions/SessionBar';
 
 // Must exactly match the name given to the Siri Shortcut built per the
 // README's "音声だけで記録する" section (Dictate Text -> Get Contents of
@@ -12,8 +14,9 @@ const SHORTCUT_NAME = 'ショット音声入力';
 export function ShotEntryPage() {
   const { clubs, loading: clubsLoading } = useClubs();
   const { shots, loading: shotsLoading, addShot, deleteShot } = useShots();
+  const { currentSession, loading: sessionsLoading, startSession, endSession } = useSessions();
 
-  if (clubsLoading || shotsLoading) return <p>読み込み中...</p>;
+  if (clubsLoading || shotsLoading || sessionsLoading) return <p>読み込み中...</p>;
 
   if (clubs.length === 0) {
     return <p>先に「クラブ管理」ページでクラブを登録してください。</p>;
@@ -31,6 +34,12 @@ export function ShotEntryPage() {
   return (
     <section>
       <h2>ショット入力</h2>
+      <SessionBar
+        currentSession={currentSession}
+        shotCountInSession={currentSession ? shots.filter((s) => s.sessionId === currentSession.id).length : 0}
+        onStart={startSession}
+        onEnd={endSession}
+      />
       <a href={shortcutUrl} className="shortcut-launch-button">
         <span>
           <span className="shortcut-launch-icon">🎤</span>

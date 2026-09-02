@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "../db/client";
-import { clubs, shotRecords } from "../db/schema";
+import { clubs, shotRecords, sessions } from "../db/schema";
 import { matchClubFromText, parseShotText } from "../lib/parseShotText";
 
 export const shotsFromTextRouter = Router();
@@ -30,6 +30,9 @@ shotsFromTextRouter.post("/", async (req, res) => {
     return res.status(422).json({ error: "飛距離を認識できませんでした。もう一度お試しください。" });
   }
 
+  const openSessionRows = await db.select().from(sessions).where(isNull(sessions.endedAt)).all();
+  const sessionId = openSessionRows.length > 0 ? openSessionRows[0].id : null;
+
   const now = new Date().toISOString();
   const row = {
     id: nanoid(10),
@@ -45,6 +48,7 @@ shotsFromTextRouter.post("/", async (req, res) => {
     externalId: null,
     recordedAt: now,
     sessionLabel: null,
+    sessionId,
     createdAt: now,
     updatedAt: now,
   };

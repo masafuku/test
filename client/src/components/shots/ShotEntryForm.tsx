@@ -62,6 +62,11 @@ export function ShotEntryForm({
   const [carryDistanceYds, setCarryDistanceYds] = useState(DEFAULT_DISTANCE);
   const [direction, setDirection] = useState<ShotDirection>('STRAIGHT');
   const [lateralDeviationYds, setLateralDeviationYds] = useState<number | undefined>(undefined);
+  // ライ/方向 are tucked into a collapsed <details> by default (see App.css) so
+  // the always-used fields fit on one screen — see the layout-simplification
+  // plan addendum. Force it open when voice parsing actually recognized one
+  // of them, so the result isn't silently hidden.
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const [voiceText, setVoiceText] = useState('');
   const [nothingRecognized, setNothingRecognized] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -98,6 +103,7 @@ export function ShotEntryForm({
     if (parsed.strength != null) setStrength(parsed.strength);
     if (parsed.lie != null) setLie(parsed.lie);
     if (matchedClub != null) setClubId(matchedClub.id);
+    if (parsed.lie != null || parsed.direction != null) setDetailsOpen(true);
 
     const recognizedNothing =
       parsed.distanceYds == null &&
@@ -159,6 +165,7 @@ export function ShotEntryForm({
       setLateralDeviationYds(undefined);
       setVoiceText('');
       setNothingRecognized(false);
+      setDetailsOpen(false);
     } catch {
       setSubmitError('保存に失敗しました。電波を確認してもう一度お試しください。');
     } finally {
@@ -191,8 +198,6 @@ export function ShotEntryForm({
         onChange={setClubId}
       />
 
-      <ChipGroup legend="ライ" options={LIE_OPTIONS} value={lie} onChange={setLie} />
-
       <ChipGroup legend="強度" options={STRENGTH_OPTIONS} value={strength} onChange={setStrength} />
 
       <label>
@@ -208,12 +213,16 @@ export function ShotEntryForm({
         />
       </label>
 
-      <ChipGroup
-        legend="方向"
-        options={DIRECTIONS.map((d) => ({ value: d, label: d }))}
-        value={direction}
-        onChange={setDirection}
-      />
+      <details className="shot-entry-details" open={detailsOpen} onToggle={(e) => setDetailsOpen(e.currentTarget.open)}>
+        <summary>詳細(ライ・方向)</summary>
+        <ChipGroup legend="ライ" options={LIE_OPTIONS} value={lie} onChange={setLie} />
+        <ChipGroup
+          legend="方向"
+          options={DIRECTIONS.map((d) => ({ value: d, label: d }))}
+          value={direction}
+          onChange={setDirection}
+        />
+      </details>
 
       {submitError && <p className="parse-warning">{submitError}</p>}
 

@@ -3,6 +3,7 @@ import path from "node:path";
 import { clubsRouter } from "./routes/clubs";
 import { shotsRouter } from "./routes/shots";
 import { shotsFromTextRouter } from "./routes/shotsFromText";
+import { sessionsRouter } from "./routes/sessions";
 
 // CommonJS output (see server/tsconfig.json) provides __dirname natively.
 const app = express();
@@ -13,6 +14,7 @@ app.use("/api/clubs", clubsRouter);
 // Mounted before /api/shots so it isn't shadowed by shotsRouter's own routes.
 app.use("/api/shots/from-text", shotsFromTextRouter);
 app.use("/api/shots", shotsRouter);
+app.use("/api/sessions", sessionsRouter);
 
 // Serve the built client as static files in production (npm run build -w client first).
 // nginx strips the /golf/ prefix before proxying here (see deploy/nginx.conf.example),

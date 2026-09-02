@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { nanoid } from "nanoid";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { db } from "../db/client";
-import { shotRecords } from "../db/schema";
+import { shotRecords, sessions } from "../db/schema";
 
 export const shotsRouter = Router();
 
@@ -21,9 +21,16 @@ function toDto(r: typeof shotRecords.$inferSelect) {
     externalId: r.externalId,
     recordedAt: r.recordedAt,
     sessionLabel: r.sessionLabel,
+    sessionId: r.sessionId,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
   };
+}
+
+/** Whatever session is currently open (endedAt IS NULL), if any — see routes/sessions.ts. */
+async function currentSessionId(): Promise<string | null> {
+  const rows = await db.select().from(sessions).where(isNull(sessions.endedAt)).all();
+  return rows.length > 0 ? rows[0].id : null;
 }
 
 shotsRouter.get("/", async (_req, res) => {
@@ -65,6 +72,8 @@ shotsRouter.post("/", async (req, res) => {
     externalId: null,
     recordedAt: recordedAt ?? now,
     sessionLabel: sessionLabel ?? null,
+    // Always server-decided (see currentSessionId) — never trust a client-supplied value.
+    sessionId: await currentSessionId(),
     createdAt: now,
     updatedAt: now,
   };

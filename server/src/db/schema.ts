@@ -27,7 +27,18 @@ export const shotRecords = sqliteTable("shot_records", {
   source: text("source").notNull(), // ShotSource union, always 'MANUAL' today
   externalId: text("external_id"), // reserved for future CSV/launch-monitor import, unused today
   recordedAt: text("recorded_at").notNull(),
-  sessionLabel: text("session_label"),
+  sessionLabel: text("session_label"), // legacy free-text field, superseded by sessionId below but kept for compat
+  sessionId: text("session_id"), // FK to sessions.id, set server-side from the currently-open session (see routes/shots.ts)
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
+});
+
+// A practice-range or on-course "session" that shots get grouped into. Only
+// one session is ever open (endedAt IS NULL) at a time — see routes/sessions.ts.
+export const sessions = sqliteTable("sessions", {
+  id: text("id").primaryKey(),
+  type: text("type").notNull(), // SessionType union ('RANGE' | 'COURSE'), see client/src/types/models.ts
+  label: text("label"),
+  startedAt: text("started_at").notNull(),
+  endedAt: text("ended_at"),
 });

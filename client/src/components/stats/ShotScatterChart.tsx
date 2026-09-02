@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Club, ShotDirection, ShotRecord } from '../../types/models';
 import { colorForIndex } from '../../lib/clubColors';
 
@@ -59,7 +59,18 @@ function niceStep(range: number): number {
   return candidates.reduce((best, c) => (Math.abs(c - target) < Math.abs(best - target) ? c : best), candidates[0]);
 }
 
-export function ShotScatterChart({ clubs, shotsForClub }: { clubs: Club[]; shotsForClub: (clubId: string) => ShotRecord[] }) {
+export function ShotScatterChart({
+  clubs,
+  shotsForClub,
+  focusedClubId,
+}: {
+  clubs: Club[];
+  shotsForClub: (clubId: string) => ShotRecord[];
+  /** When set (e.g. from tapping a club row in ClubStatsTable), narrows the
+   *  chart to just that club by hiding all others — see the effect below.
+   *  The legend checkboxes stay fully usable afterward to bring others back. */
+  focusedClubId?: string;
+}) {
   const series = clubs.map((club, i) => {
     const shots = shotsForClub(club.id).filter((s) => s.carryDistanceYds != null && lateralYds(s) != null);
     const xs = shots.map((s) => lateralYds(s)!);
@@ -78,6 +89,13 @@ export function ShotScatterChart({ clubs, shotsForClub }: { clubs: Club[]; shots
   });
 
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally re-runs only when focusedClubId changes, not on every `clubs` identity change
+  useEffect(() => {
+    if (!focusedClubId) return;
+    setHidden(new Set(clubs.filter((c) => c.id !== focusedClubId).map((c) => c.id)));
+  }, [focusedClubId]);
+
   function toggle(clubId: string) {
     setHidden((prev) => {
       const next = new Set(prev);
