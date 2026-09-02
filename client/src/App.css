@@ -36,6 +36,21 @@
   border-color: #2c7a4b;
 }
 
+/* Deep-links into the Siri Shortcut (shortcuts://run-shortcut?name=...) so
+   voice entry can start without leaving the app first. iOS-only by nature —
+   harmless no-op tap on desktop/Android, so no feature-detection needed. */
+.shortcut-launch-button {
+  display: block;
+  text-align: center;
+  padding: 0.75rem;
+  margin: 1rem 0;
+  background: #2c7a4b;
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
 .club-form,
 .shot-entry-form {
   display: flex;
