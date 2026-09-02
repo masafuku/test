@@ -21,11 +21,15 @@ export function DashboardPage() {
 
   if (clubsLoading || shotsLoading || sessionsLoading) return <p>読み込み中...</p>;
 
-  const shots = sessionFilter === 'ALL' ? allShots : allShots.filter((s) => s.sessionId === sessionFilter);
   const shotsForClub = (clubId: string): ShotRecord[] =>
     sessionFilter === 'ALL' ? shotsForClubAll(clubId) : shotsForClubAll(clubId).filter((s) => s.sessionId === sessionFilter);
 
   const activeClubs = sortByBagOrder(clubs.filter((c) => c.isActive ?? true));
+  // When a specific session is selected, hide clubs that weren't used in it —
+  // otherwise the table/chart is dominated by "no shots" rows for clubs that
+  // simply weren't brought out that day. "全期間" keeps showing the full bag.
+  const displayClubs =
+    sessionFilter === 'ALL' ? activeClubs : activeClubs.filter((c) => shotsForClub(c.id).length > 0);
 
   const clubStatsForGapping = activeClubs
     .map((club) => {
@@ -63,16 +67,16 @@ export function DashboardPage() {
       {gappingInsights.map((insight, i) => (
         <InsightBadge key={i} insight={insight} />
       ))}
-      {activeClubs.length > 0 && (
-        <ClubStatsTable clubs={activeClubs} shotsForClub={shotsForClub} onSelectClub={handleSelectClub} />
+      {displayClubs.length > 0 && (
+        <ClubStatsTable clubs={displayClubs} shotsForClub={shotsForClub} onSelectClub={handleSelectClub} />
       )}
       {activeClubs.length === 0 && <p>クラブが登録されていません。</p>}
-      {shots.length === 0 && activeClubs.length > 0 && <p>まだショットが記録されていません。</p>}
+      {activeClubs.length > 0 && displayClubs.length === 0 && <p>このセッションではまだショットが記録されていません。</p>}
 
-      {activeClubs.length > 0 && (
+      {displayClubs.length > 0 && (
         <div className="shot-scatter" ref={scatterRef}>
           <h3>散布図(クラブ別)</h3>
-          <ShotScatterChart clubs={activeClubs} shotsForClub={shotsForClub} focusedClubId={focusedClubId} />
+          <ShotScatterChart clubs={displayClubs} shotsForClub={shotsForClub} focusedClubId={focusedClubId} />
         </div>
       )}
     </section>
