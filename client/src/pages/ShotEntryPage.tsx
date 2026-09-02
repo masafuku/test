@@ -7,7 +7,7 @@ import { ShotHistoryTable } from '../components/shots/ShotHistoryTable';
 // README's "音声だけで記録する" section (Dictate Text -> Get Contents of
 // URL -> POST /api/shots/from-text). The shortcuts:// URL scheme is iOS-only
 // — tapping this link on desktop/Android just does nothing, harmlessly.
-const SHORTCUT_NAME = 'ゴルフ記録';
+const SHORTCUT_NAME = 'ショット音声入力';
 
 export function ShotEntryPage() {
   const { clubs, loading: clubsLoading } = useClubs();
