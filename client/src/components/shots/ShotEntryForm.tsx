@@ -175,22 +175,6 @@ export function ShotEntryForm({
 
   return (
     <form onSubmit={handleSubmit} className="shot-entry-form">
-      <label>
-        音声/テキスト入力(マイクで話す、例:「7番アイアン、ラフからハーフで150ヤード、ちょっと右5ヤード」)
-        <input
-          type="text"
-          value={voiceText}
-          onChange={(e) => setVoiceText(e.target.value)}
-          onBlur={handleVoiceTextBlur}
-          placeholder="ここをタップしてキーボードのマイクで話す"
-        />
-      </label>
-      {nothingRecognized && (
-        <p className="parse-warning">
-          クラブ・距離・方向・強度・ライを認識できませんでした。下のフィールドを手動で選んでください。(入力内容: 「{voiceText}」)
-        </p>
-      )}
-
       <ChipGroup
         legend="クラブ"
         options={activeClubs.map((c) => ({ value: c.id, label: c.name }))}
@@ -213,8 +197,27 @@ export function ShotEntryForm({
         />
       </label>
 
+      {/* Text entry is a fallback for manually typing/dictating a shot without
+          going through the Siri Shortcut (the primary voice path — see the
+          big circular button on ShotEntryPage), so it's tucked away here
+          along with the other low-frequency fields. */}
       <details className="shot-entry-details" open={detailsOpen} onToggle={(e) => setDetailsOpen(e.currentTarget.open)}>
-        <summary>詳細(ライ・方向)</summary>
+        <summary>詳細(テキスト入力・ライ・方向)</summary>
+        <label>
+          音声/テキスト入力(マイクで話す、例:「7番アイアン、ラフからハーフで150ヤード、ちょっと右5ヤード」)
+          <input
+            type="text"
+            value={voiceText}
+            onChange={(e) => setVoiceText(e.target.value)}
+            onBlur={handleVoiceTextBlur}
+            placeholder="ここをタップしてキーボードのマイクで話す"
+          />
+        </label>
+        {nothingRecognized && (
+          <p className="parse-warning">
+            クラブ・距離・方向・強度・ライを認識できませんでした。下のフィールドを手動で選んでください。(入力内容: 「{voiceText}」)
+          </p>
+        )}
         <ChipGroup legend="ライ" options={LIE_OPTIONS} value={lie} onChange={setLie} />
         <ChipGroup
           legend="方向"
